@@ -19,7 +19,7 @@ font_small = pygame.font.Font(None, 50)
 
 # Game variables
 word_list = ["python", "pygame", "bomb", "explode", "timer", "keyboard", "game"]
-current_word = random.choice(word_list)
+currentWord = random.choice(word_list)
 typed_text = ""
 time_limit = 5  # seconds to type each word
 start_time = time.time()
@@ -36,7 +36,7 @@ while running:
     remaining_time = time_limit - elapsed_time
 
     # Display current word
-    word_text = font_large.render(current_word, True, BLACK)
+    word_text = font_large.render(currentWord, True, BLACK)
     screen.blit(word_text, (WIDTH // 2 - word_text.get_width() // 2, HEIGHT // 2 - 100))
 
     # Display typed text
@@ -64,15 +64,15 @@ while running:
                 # Reset the game if game over
                 game_over = False
                 score = 0
-                current_word = random.choice(word_list)
+                currentWord = random.choice(word_list)
                 typed_text = ""
                 start_time = time.time()
             elif event.key == pygame.K_BACKSPACE:
                 typed_text = typed_text[:-1]
             elif event.key == pygame.K_RETURN:
-                if typed_text.lower() == current_word:
+                if typed_text.lower() == currentWord:
                     score += 1
-                    current_word = random.choice(word_list)
+                    currentWord = random.choice(word_list)
                     typed_text = ""
                     start_time = time.time()  # reset timer
                 else:
