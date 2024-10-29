@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Red Square Game</title>
+    <style>
+        /* Center canvas and remove margins */
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #222;
+        }
+        canvas {
+            display: block;
+            background-color: #444;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <script>
+        // Get canvas and context
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Set canvas size
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // Player object
+        let player = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            size: 30,
+            speed: 5,
+            color: 'red',
+            dx: 0,
+            dy: 0
+        };
+
+        // Circles array
+        let circles = [];
+
+        // Create random circles
+        function createCircles(num) {
+            for (let i = 0; i < num; i++) {
+                let circle = {
+                    x: Math.random() * (canvas.width - 30) + 15,
+                    y: Math.random() * (canvas.height - 30) + 15,
+                    radius: 15,
+                    color: 'grey',
+                    touched: false
+                };
+                circles.push(circle);
+            }
+        }
+
+        createCircles(10); // Create 10 circles
+
+        // Keyboard controls
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight' || e.key === 'd') {
+                player.dx = player.speed;
+            }
+            if (e.key === 'ArrowLeft' || e.key === 'a') {
+                player.dx = -player.speed;
+            }
+            if (e.key === 'ArrowUp' || e.key === 'w') {
+                player.dy = -player.speed;
+            }
+            if (e.key === 'ArrowDown' || e.key === 's') {
+                player.dy = player.speed;
+            }
+        });
+
+        document.addEventListener('keyup', function(e) {
+            if (['ArrowRight', 'd', 'ArrowLeft', 'a'].includes(e.key)) {
+                player.dx = 0;
+            }
+            if (['ArrowUp', 'w', 'ArrowDown', 's'].includes(e.key)) {
+                player.dy = 0;
+            }
+        });
+
+        // Touch controls
+        let touchActive = false;
+        let touchX = player.x;
+        let touchY = player.y;
+
+        canvas.addEventListener('touchstart', handleTouch);
+        canvas.addEventListener('touchmove', handleTouch);
+        canvas.addEventListener('touchend', function() {
+            touchActive = false;
+            player.dx = 0;
+            player.dy = 0;
+        });
+
+        function handleTouch(e) {
+            e.preventDefault(); // Prevent scrolling
+            touchActive = true;
+            let touch = e.touches[0];
+            touchX = touch.clientX;
+            touchY = touch.clientY;
+        }
+
+        // Game loop
+        function update() {
+            requestAnimationFrame(update);
+
+            // Move player towards touch
+            if (touchActive) {
+                let angle = Math.atan2(touchY - player.y - player.size / 2, touchX - player.x - player.size / 2);
+                player.dx = Math.cos(angle) * player.speed;
+                player.dy = Math.sin(angle) * player.speed;
+            }
+
+            // Update player position
+            player.x += player.dx;
+            player.y += player.dy;
+
+            // Keep player within bounds
+            if (player.x < 0) player.x = 0;
+            if (player.x + player.size > canvas.width) player.x = canvas.width - player.size;
+            if (player.y < 0) player.y = 0;
+            if (player.y + player.size > canvas.height) player.y = canvas.height - player.size;
+
+            // Check collisions with circles
+            for (let circle of circles) {
+                if (!circle.touched && isColliding(player, circle)) {
+                    circle.touched = true;
+                    circle.color = player.color;
+                }
+            }
+
+            // Draw everything
+            draw();
+        }
+
+        // Collision detection between rectangle and circle
+        function isColliding(rect, circle) {
+            let distX = Math.abs(circle.x - rect.x - rect.size / 2);
+            let distY = Math.abs(circle.y - rect.y - rect.size / 2);
+
+            if (distX > (rect.size / 2 + circle.radius)) { return false; }
+            if (distY > (rect.size / 2 + circle.radius)) { return false; }
+
+            if (distX <= (rect.size / 2)) { return true; }
+            if (distY <= (rect.size / 2)) { return true; }
+
+            let dx = distX - rect.size / 2;
+            let dy = distY - rect.size / 2;
+            return (dx * dx + dy * dy <= (circle.radius * circle.radius));
+        }
+
+        // Draw player and circles
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw player
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.size, player.size);
+
+            // Draw circles
+            for (let circle of circles) {
+                ctx.beginPath();
+                ctx.arc(circle.x, circle.y, circle.radius, 0, Math.PI * 2);
+                ctx.fillStyle = circle.color;
+                ctx.fill();
+                ctx.closePath();
+            }
+        }
+
+        update(); // Start game loop
+
+        // Adjust canvas size on window resize
+        window.addEventListener('resize', function() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+    </script>
+</body>
+</html>
